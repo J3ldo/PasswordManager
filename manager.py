@@ -1,4 +1,4 @@
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 import base64
 import hashlib
 
@@ -27,7 +27,7 @@ f = Fernet(key)
 
 def add_pass(user: str, passw: str):
     with open("passwords.txt", "a") as b:
-        b.write(f"\n{user}|{f.encrypt(passw.encode()).decode()}")
+        b.write(f"\n{f.encrypt(user.encode()).decode()}|{f.encrypt(passw.encode()).decode()}")
 
 
 def view_pass():
@@ -35,9 +35,12 @@ def view_pass():
         print("   Name\tPassword")
         for i, item in enumerate(b.read().split("\n")):
             try:
-                print(f"{i}) {item.split('|')[0]} | {f.decrypt(item.split('|')[1].encode()).decode()}")
+                print(f"{i}) {f.decrypt(item.split('|')[0].encode()).decode()} | {f.decrypt(item.split('|')[1].encode()).decode()}")
             except IndexError:
                 pass
+            except InvalidToken:
+                print("   Something went wrong. Maybe the list is empty or you are trying to decode with an invalid key")
+                return
 
 
 def remove_pass(index):
